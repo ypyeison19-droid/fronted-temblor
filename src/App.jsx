@@ -123,7 +123,7 @@ function App() {
         {/* Encabezado */}
         <header style={{ textAlign: 'center', marginBottom: '30px' }}>
           <span style={{ backgroundColor: '#2563eb', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            🔴 Red de Monitoreo Comunitaria
+            🔴 Red de Monitoreo Comunitaria Cauca 
           </span>
           <h1 style={{ fontSize: '28px', marginTop: '10px', marginBottom: '5px' }}>Reporte de Sismos</h1>
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa eventos sísmicos y consulta los registros de la comunidad en tiempo real.</p>
@@ -153,12 +153,12 @@ function App() {
 
             <div>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Lugar / Municipio</label>
-              <input name="lugar" value={formData.lugar} placeholder="Ej. Cali" onChange={handleChange} required style={inputStyle} />
+              <input name="lugar" value={formData.lugar} placeholder="Ej. Popayán" onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Área / Departamento</label>
-              <input name="area" value={formData.area} placeholder="Ej. Valle del Cauca" onChange={handleChange} required style={inputStyle} />
+              <input name="area" value={formData.area} placeholder="Ej. Cauca" onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div>
