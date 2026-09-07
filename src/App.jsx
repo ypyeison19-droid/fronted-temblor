@@ -6,8 +6,10 @@ function App() {
   const [editandoId, setEditandoId] = useState(null)
   const [esAdmin, setEsAdmin] = useState(false)
   const [claveInput, setClaveInput] = useState('')
+  
   const [formData, setFormData] = useState({
     nombre: '',
+    tipo_alerta: 'Sismo', // Campo para el tipo de evento
     magnitud: '',
     profundidad: '',
     rango: '',
@@ -17,9 +19,7 @@ function App() {
     hora: ''
   })
 
-  // CLAVE PARA HABILITAR EDICIÓN Y ELIMINACIÓN
-  const CLAVE_ADMIN = 'admin070724' 
-
+  const CLAVE_ADMIN = 'admin070724'
   const API_URL = 'https://sismos-backend-6qsi.onrender.com/api/temblores/'
 
   const obtenerTemblores = async () => {
@@ -48,7 +48,7 @@ function App() {
         setEditandoId(null)
       } else {
         await axios.post(API_URL, formData)
-        alert('¡Reporte de sismo enviado exitosamente!')
+        alert('¡Reporte de alerta enviado exitosamente!')
       }
       limpiarFormulario()
       obtenerTemblores()
@@ -62,6 +62,7 @@ function App() {
     setEditandoId(temblor.id)
     setFormData({
       nombre: temblor.nombre,
+      tipo_alerta: temblor.tipo_alerta || 'Sismo',
       magnitud: temblor.magnitud,
       profundidad: temblor.profundidad,
       rango: temblor.rango,
@@ -88,6 +89,7 @@ function App() {
   const limpiarFormulario = () => {
     setFormData({
       nombre: '',
+      tipo_alerta: 'Sismo',
       magnitud: '',
       profundidad: '',
       rango: '',
@@ -109,45 +111,62 @@ function App() {
     }
   }
 
-  const getBadgeColor = (mag) => {
-    const m = parseFloat(mag)
-    if (m >= 6.0) return '#dc3545' // Rojo (Fuerte)
-    if (m >= 4.5) return '#fd7e14' // Naranja (Moderado)
-    return '#28a745' // Verde (Leve)
+  // Devuelve el icono según la alerta elegida
+  const getIconoAlerta = (tipo) => {
+    switch (tipo) {
+      case 'Volcán': return '🌋'
+      case 'Deslizamiento': return '⛰️'
+      case 'Inundación': return '🌊'
+      case 'Incendio': return '🔥'
+      default: return '🌋'
+    }
   }
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '20px 10px' }}>
       <div style={{ maxWidth: '650px', margin: '0 auto' }}>
         
-        {/* Encabezado */}
+        {/* Encabezado Principal */}
         <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <span style={{ backgroundColor: '#2563eb', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            🔴 Red de Monitoreo Comunitaria Cauca 
+          <span style={{ backgroundColor: '#dc2626', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            🚨 Red de Alertas y Emergencias Comunitarias Cauca
           </span>
-          <h1 style={{ fontSize: '28px', marginTop: '10px', marginBottom: '5px' }}>Reporte de Sismos</h1>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa eventos sísmicos y consulta los registros de la comunidad en tiempo real.</p>
+          <h1 style={{ fontSize: '28px', marginTop: '10px', marginBottom: '5px' }}>Sistema de Alertas Tempranas</h1>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa sobre actividad volcánica, sismos u otros eventos de riesgo en tiempo real.</p>
         </header>
 
         {/* Formulario */}
         <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', marginBottom: '35px' }}>
           <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#38bdf8' }}>
-            {editandoId ? '✏️ Editar Reporte' : '📝 Enviar Nuevo Reporte'}
+            {editandoId ? '✏️ Editar Registro de Alerta' : '📢 Reportar un Evento de Riesgo'}
           </h2>
 
           <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Nombre del Reportante</label>
-              <input name="nombre" value={formData.nombre} placeholder="Ej. Juan Pérez" onChange={handleChange} required style={inputStyle} />
+              <input name="nombre" value={formData.nombre} placeholder="Ej. Estiben Muñoz" onChange={handleChange} required style={inputStyle} />
+            </div>
+
+            {/* Nueva caja: Selector del tipo de emergencia */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Tipo de Evento / Emergencia</label>
+              <select name="tipo_alerta" value={formData.tipo_alerta} onChange={handleChange} style={inputStyle}>
+                <option value="Sismo">🌋 Sismo / Temblor</option>
+                <option value="Volcán">🌋 Actividad Volcánica</option>
+                <option value="Deslizamiento">⛰️ Deslizamiento / Derrumbe</option>
+                <option value="Inundación">🌊 Inundación / Creciente</option>
+                <option value="Incendio">🔥 Incendio Forestal</option>
+              </select>
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Magnitud (M)</label>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Magnitud / Intensidad</label>
               <input name="magnitud" type="number" step="0.1" value={formData.magnitud} placeholder="Ej. 5.2" onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Profundidad (km)</label>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Profundidad / Radio (km)</label>
               <input name="profundidad" type="number" step="0.1" value={formData.profundidad} placeholder="Ej. 30" onChange={handleChange} required style={inputStyle} />
             </div>
 
@@ -162,23 +181,23 @@ function App() {
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Rango / Intensidad</label>
-              <input name="rango" type="number" value={formData.rango} placeholder="Ej. 4" onChange={handleChange} required style={inputStyle} />
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Nivel de Alerta (1-5)</label>
+              <input name="rango" type="number" value={formData.rango} placeholder="Ej. 3" onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Fecha</label>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Fecha del Evento</label>
               <input name="fecha" type="date" value={formData.fecha} onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Hora local</label>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Hora exacta o estimada</label>
               <input name="hora" type="time" value={formData.hora} onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button type="submit" style={{ ...btnStyle, backgroundColor: editandoId ? '#16a34a' : '#2563eb', flex: 1 }}>
-                {editandoId ? 'Guardar Cambios' : 'Enviar Reporte'}
+                {editandoId ? 'Guardar Cambios' : 'Publicar Alerta'}
               </button>
               {editandoId && (
                 <button type="button" onClick={limpiarFormulario} style={{ ...btnStyle, backgroundColor: '#64748b' }}>
@@ -189,31 +208,31 @@ function App() {
           </form>
         </div>
 
-        {/* Historial de Temblores */}
+        {/* Lista de Alertas */}
         <h2 style={{ fontSize: '20px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>📋 Historial de Sismos</span>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{temblores.length} registros</span>
+          <span>📋 Historial de Alertas Publicadas</span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{temblores.length} reportes</span>
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {temblores.map((t) => (
-            <div key={t.id} style={{ backgroundColor: '#1e293b', borderLeft: `5px solid ${getBadgeColor(t.magnitud)}`, padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div key={t.id} style={{ backgroundColor: '#1e293b', borderLeft: '5px solid #ef4444', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '20px' }}>{getIconoAlerta(t.tipo_alerta)}</span>
                   <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar}, {t.area}</strong>
-                  <span style={{ backgroundColor: getBadgeColor(t.magnitud), color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                    {t.magnitud} M
+                  <span style={{ backgroundColor: '#334155', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                    {t.tipo_alerta || 'Sismo'}
                   </span>
                 </div>
                 <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
-                  Profundidad: <strong style={{ color: '#cbd5e1' }}>{t.profundidad} km</strong> | Rango: {t.rango}
+                  Magnitud/Intensidad: <strong style={{ color: '#cbd5e1' }}>{t.magnitud}</strong> | Nivel de Riesgo: <strong style={{ color: '#ef4444' }}>{t.rango}</strong>
                 </p>
                 <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
                   Reportado por <span style={{ color: '#38bdf8' }}>{t.nombre}</span> el {t.fecha} a las {t.hora}
                 </p>
               </div>
 
-              {/* Botones protegidos por modo Administrador */}
               {esAdmin && (
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => handleEditar(t)} style={smallBtnStyle('#eab308')}>Editar</button>
@@ -224,7 +243,7 @@ function App() {
           ))}
         </div>
 
-        {/* Control del Modo Admin al final */}
+        {/* Modo Admin */}
         <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #334155', textAlign: 'center' }}>
           {!esAdmin ? (
             <form onSubmit={verificarAdmin} style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
