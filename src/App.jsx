@@ -18,7 +18,7 @@ function App() {
   })
 
   // CLAVE PARA HABILITAR EDICIÓN Y ELIMINACIÓN
-  const CLAVE_ADMIN = 'admin123' 
+  const CLAVE_ADMIN = 'admin070724' 
 
   const API_URL = 'https://sismos-backend-6qsi.onrender.com/api/temblores/'
 
