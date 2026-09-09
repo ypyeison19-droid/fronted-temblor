@@ -3,7 +3,7 @@ import axios from 'axios'
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
-// Corrección de iconos por defecto de Leaflet en React
+// Corrección para que los iconos predeterminados de Leaflet funcionen bien en React
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -11,7 +11,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-// Componente para capturar el clic en el mapa y guardar latitud/longitud
+// Componente para capturar el clic en el mapa y guardar las coordenadas
 function SelectorCoordenadas({ setCoordenadas }) {
   useMapEvents({
     click(e) {
@@ -27,7 +27,7 @@ function App() {
   const [esAdmin, setEsAdmin] = useState(false)
   const [claveInput, setClaveInput] = useState('')
   
-  // Coordenadas por defecto (Centro en Colombia / Popayán - Cauca)
+  // Coordenadas por defecto (Ejemplo: Popayán / Cauca)
   const [posicionSeleccionada, setPosicionSeleccionada] = useState({ lat: 2.4419, lng: -76.6063 })
   const [imagenBase64, setImagenBase64] = useState('')
 
@@ -63,7 +63,7 @@ function App() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  // Convertir la imagen capturada/subida a Base64 para guardarla fácilmente
+  // Lectura y conversión de archivo/foto a Base64
   const handleImagenChange = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -82,7 +82,6 @@ function App() {
       ...formData,
       magnitud: esEventoSismico(formData.tipo_alerta) ? formData.magnitud : '0.0',
       profundidad: esEventoSismico(formData.tipo_alerta) ? formData.profundidad : '0.0',
-      // Adjuntamos las coordenadas y la imagen al texto de área o estructura
       area: `${formData.area || 'Sin detalles'} | Lat: ${posicionSeleccionada.lat.toFixed(4)}, Lng: ${posicionSeleccionada.lng.toFixed(4)}`
     }
 
@@ -101,6 +100,22 @@ function App() {
       console.error('Error al guardar:', error)
       alert('Ocurrió un error al enviar el reporte.')
     }
+  }
+
+  const handleEditar = (temblor) => {
+    setEditandoId(temblor.id)
+    setFormData({
+      nombre: temblor.nombre,
+      tipo_alerta: temblor.tipo_alerta || 'Sismo',
+      magnitud: temblor.magnitud,
+      profundidad: temblor.profundidad,
+      rango: temblor.rango,
+      lugar: temblor.lugar,
+      area: temblor.area,
+      fecha: temblor.fecha,
+      hora: temblor.hora
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const limpiarFormulario = () => {
@@ -151,17 +166,17 @@ function App() {
             🚨 Red de Alertas y Emergencias Comunitarias
           </span>
           <h1 style={{ fontSize: '28px', marginTop: '10px', marginBottom: '5px' }}>Sistema de Alertas Tempranas</h1>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Ubica el suceso en el mapa y sube/toma la fotografía en tiempo real.</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa sobre eventos de riesgo, ubícalos en el mapa y adjunta evidencias.</p>
         </header>
 
-        {/* MAPA GENERAL DE REPORTES */}
+        {/* MAPA GENERAL */}
         <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '16px', marginBottom: '25px' }}>
-          <h3 style={{ fontSize: '16px', color: '#38bdf8', marginBottom: '10px' }}>🗺️ Mapa de Eventos Registrados</h3>
-          <div style={{ height: '300px', borderRadius: '12px', overflow: 'hidden' }}>
-            <MapContainer center={[2.4419, -76.6063]} zoom={8} style={{ height: '100%', width: '100%' }}>
+          <h3 style={{ fontSize: '16px', color: '#38bdf8', marginBottom: '10px' }}>🗺️ Ubicación del Evento en Mapa</h3>
+          <div style={{ height: '260px', borderRadius: '12px', overflow: 'hidden' }}>
+            <MapContainer center={[posicionSeleccionada.lat, posicionSeleccionada.lng]} zoom={8} style={{ height: '100%', width: '100%' }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <Marker position={[posicionSeleccionada.lat, posicionSeleccionada.lng]}>
-                <Popup>Punto de evento seleccionado</Popup>
+                <Popup>Punto seleccionado</Popup>
               </Marker>
             </MapContainer>
           </div>
@@ -191,12 +206,12 @@ function App() {
               </select>
             </div>
 
-            {/* SELECCIONAR UBICACIÓN EN EL MAPA */}
+            {/* SELECCIÓN DE COORDENADAS */}
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', display: 'block' }}>
-                📍 Haz clic en el mapa para marcar la ubicación del evento:
+                📍 Haz clic en el mapa para ajustar la posición de la alerta:
               </label>
-              <div style={{ height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #334155' }}>
+              <div style={{ height: '200px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #334155' }}>
                 <MapContainer center={[posicionSeleccionada.lat, posicionSeleccionada.lng]} zoom={9} style={{ height: '100%', width: '100%' }}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <SelectorCoordenadas setCoordenadas={setPosicionSeleccionada} />
@@ -204,13 +219,13 @@ function App() {
                 </MapContainer>
               </div>
               <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                Coordenadas elegidas: Lat {posicionSeleccionada.lat.toFixed(4)}, Lng {posicionSeleccionada.lng.toFixed(4)}
+                Coordenadas seleccionadas: Lat {posicionSeleccionada.lat.toFixed(4)}, Lng {posicionSeleccionada.lng.toFixed(4)}
               </p>
             </div>
 
-            {/* CAPTURA DE IMAGEN O CÁMARA */}
+            {/* SUBIR O TOMAR FOTO */}
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>📷 Fotografía del Suceso (Tomar con la cámara o subir archivo)</label>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>📷 Adjuntar Fotografía (Cámara / Archivo)</label>
               <input 
                 type="file" 
                 accept="image/*" 
@@ -241,7 +256,7 @@ function App() {
             ) : (
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Detalles / Observaciones de la Emergencia</label>
-                <input name="area" value={formData.area} placeholder="Ej. Incendio en zona alta, riesgo de propagación" onChange={handleChange} required style={inputStyle} />
+                <input name="area" value={formData.area} placeholder="Ej. Bloqueo de vía por derrumbe de piedras" onChange={handleChange} required style={inputStyle} />
               </div>
             )}
 
@@ -269,6 +284,11 @@ function App() {
               <button type="submit" style={{ ...btnStyle, backgroundColor: editandoId ? '#16a34a' : '#2563eb', flex: 1 }}>
                 {editandoId ? 'Guardar Cambios' : 'Publicar Alerta con Foto y Mapa'}
               </button>
+              {editandoId && (
+                <button type="button" onClick={limpiarFormulario} style={{ ...btnStyle, backgroundColor: '#64748b' }}>
+                  Cancelar
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -279,10 +299,11 @@ function App() {
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>{temblores.length} reportes</span>
         </h2>
 
+        {/* Lista de Alertas en Historial */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {temblores.map((t) => (
             <div key={t.id} style={{ backgroundColor: '#1e293b', borderLeft: '5px solid #ef4444', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{ fontSize: '20px' }}>{getIconoAlerta(t.tipo_alerta)}</span>
                   <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar}</strong>
@@ -298,16 +319,46 @@ function App() {
                 <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
                   Reportado por <span style={{ color: '#38bdf8' }}>{t.nombre}</span> el {t.fecha} a las {t.hora}
                 </p>
+
+                {/* Muestra la imagen adjunta en la tarjeta si está disponible */}
+                {imagenBase64 && t.id === editandoId && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img 
+                      src={imagenBase64} 
+                      alt="Evidencia del suceso" 
+                      style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #334155' }} 
+                    />
+                  </div>
+                )}
               </div>
 
               {esAdmin && (
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                  <button onClick={() => handleEditar(t)} style={smallBtnStyle('#eab308')}>Editar</button>
                   <button onClick={() => axios.delete(`${API_URL}${t.id}/`).then(() => obtenerTemblores())} style={smallBtnStyle('#ef4444')}>Eliminar</button>
                 </div>
               )}
             </div>
           ))}
         </div>
+
+        {/* Modo Admin */}
+        <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #334155', textAlign: 'center' }}>
+          {!esAdmin ? (
+            <form onSubmit={verificarAdmin} style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+              <input 
+                type="password" 
+                placeholder="Clave de admin para editar/borrar" 
+                value={claveInput} 
+                onChange={(e) => setClaveInput(e.target.value)}
+                style={{ ...inputStyle, width: '220px', padding: '6px 12px', fontSize: '12px' }}
+              />
+              <button type="submit" style={{ ...btnStyle, padding: '6px 12px', fontSize: '12px', backgroundColor: '#475569' }}>Acceder</button>
+            </form>
+          ) : (
+            <p style={{ fontSize: '12px', color: '#22c55e' }}>✅ Modo Administrador Activo</p>
+          )}
+        </footer>
 
       </div>
     </div>
