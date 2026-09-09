@@ -9,17 +9,17 @@ function App() {
   
   const [formData, setFormData] = useState({
     nombre: '',
-    tipo_alerta: 'Sismo', // Campo para el tipo de evento
+    tipo_alerta: 'Sismo',
     magnitud: '',
     profundidad: '',
-    rango: '',
+    rango: '3',
     lugar: '',
     area: '',
     fecha: '',
     hora: ''
   })
 
-  const CLAVE_ADMIN = 'admin070724'
+  const CLAVE_ADMIN = 'admin123'
   const API_URL = 'https://sismos-backend-6qsi.onrender.com/api/temblores/'
 
   const obtenerTemblores = async () => {
@@ -41,13 +41,21 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Si no es sismo ni volcán, asignamos valores por defecto a magnitud y profundidad para no romper la base de datos
+    const datosEnvio = {
+      ...formData,
+      magnitud: esEventoSismico(formData.tipo_alerta) ? formData.magnitud : '0.0',
+      profundidad: esEventoSismico(formData.tipo_alerta) ? formData.profundidad : '0.0'
+    }
+
     try {
       if (editandoId) {
-        await axios.put(`${API_URL}${editandoId}/`, formData)
+        await axios.put(`${API_URL}${editandoId}/`, datosEnvio)
         alert('¡Registro actualizado exitosamente!')
         setEditandoId(null)
       } else {
-        await axios.post(API_URL, formData)
+        await axios.post(API_URL, datosEnvio)
         alert('¡Reporte de alerta enviado exitosamente!')
       }
       limpiarFormulario()
@@ -92,7 +100,7 @@ function App() {
       tipo_alerta: 'Sismo',
       magnitud: '',
       profundidad: '',
-      rango: '',
+      rango: '3',
       lugar: '',
       area: '',
       fecha: '',
@@ -111,7 +119,11 @@ function App() {
     }
   }
 
-  // Devuelve el icono según la alerta elegida
+  // Verifica si el tipo de evento seleccionado requiere Magnitud y Profundidad
+  const esEventoSismico = (tipo) => {
+    return tipo === 'Sismo' || tipo === 'Volcán'
+  }
+
   const getIconoAlerta = (tipo) => {
     switch (tipo) {
       case 'Volcán': return '🌋'
@@ -126,7 +138,7 @@ function App() {
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '20px 10px' }}>
       <div style={{ maxWidth: '650px', margin: '0 auto' }}>
         
-        {/* Encabezado Principal */}
+        {/* Encabezado */}
         <header style={{ textAlign: 'center', marginBottom: '30px' }}>
           <span style={{ backgroundColor: '#dc2626', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
             🚨 Red de Alertas y Emergencias Comunitarias Cauca
@@ -135,10 +147,10 @@ function App() {
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa sobre actividad volcánica, sismos u otros eventos de riesgo en tiempo real.</p>
         </header>
 
-        {/* Formulario */}
+        {/* Formulario Dinámico */}
         <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', marginBottom: '35px' }}>
           <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#38bdf8' }}>
-            {editandoId ? '✏️ Editar Registro de Alerta' : '📢 Reportar un Evento de Riesgo'}
+            {editandoId ? '✏️ Editar Registro' : '📢 Reportar un Evento de Riesgo'}
           </h2>
 
           <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -148,7 +160,7 @@ function App() {
               <input name="nombre" value={formData.nombre} placeholder="Ej. Estiben Muñoz" onChange={handleChange} required style={inputStyle} />
             </div>
 
-            {/* Nueva caja: Selector del tipo de emergencia */}
+            {/* Selector de tipo de alerta */}
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Tipo de Evento / Emergencia</label>
               <select name="tipo_alerta" value={formData.tipo_alerta} onChange={handleChange} style={inputStyle}>
@@ -160,29 +172,45 @@ function App() {
               </select>
             </div>
 
-            <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Magnitud / Intensidad</label>
-              <input name="magnitud" type="number" step="0.1" value={formData.magnitud} placeholder="Ej. 5.2" onChange={handleChange} required style={inputStyle} />
-            </div>
+            {/* CAMPOS DINÁMICOS SEGÚN EL TIPO DE EVENTO */}
+            {esEventoSismico(formData.tipo_alerta) ? (
+              <>
+                <div>
+                  <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Magnitud (M)</label>
+                  <input name="magnitud" type="number" step="0.1" value={formData.magnitud} placeholder="Ej. 5.2" onChange={handleChange} required style={inputStyle} />
+                </div>
 
-            <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Profundidad / Radio (km)</label>
-              <input name="profundidad" type="number" step="0.1" value={formData.profundidad} placeholder="Ej. 30" onChange={handleChange} required style={inputStyle} />
-            </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Profundidad (km)</label>
+                  <input name="profundidad" type="number" step="0.1" value={formData.profundidad} placeholder="Ej. 30" onChange={handleChange} required style={inputStyle} />
+                </div>
+              </>
+            ) : (
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Detalles / Observaciones de la Emergencia</label>
+                <input name="area" value={formData.area} placeholder={
+                  formData.tipo_alerta === 'Incendio' ? 'Ej. Incendio en zona boscosa, 2 hectáreas' :
+                  formData.tipo_alerta === 'Inundación' ? 'Ej. Creciente del río, riesgo en viviendas' :
+                  'Ej. Vía bloqueada por caída de rocas y tierra'
+                } onChange={handleChange} required style={inputStyle} />
+              </div>
+            )}
 
             <div>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Lugar / Municipio</label>
               <input name="lugar" value={formData.lugar} placeholder="Ej. Popayán" onChange={handleChange} required style={inputStyle} />
             </div>
 
-            <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Área / Departamento</label>
-              <input name="area" value={formData.area} placeholder="Ej. Cauca" onChange={handleChange} required style={inputStyle} />
-            </div>
+            {esEventoSismico(formData.tipo_alerta) && (
+              <div>
+                <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Área / Departamento</label>
+                <input name="area" value={formData.area} placeholder="Ej. Cauca" onChange={handleChange} required style={inputStyle} />
+              </div>
+            )}
 
             <div>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Nivel de Alerta (1-5)</label>
-              <input name="rango" type="number" value={formData.rango} placeholder="Ej. 3" onChange={handleChange} required style={inputStyle} />
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Nivel de Alerta (1 a 5)</label>
+              <input name="rango" type="number" min="1" max="5" value={formData.rango} placeholder="Ej. 3" onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div>
@@ -190,8 +218,8 @@ function App() {
               <input name="fecha" type="date" value={formData.fecha} onChange={handleChange} required style={inputStyle} />
             </div>
 
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Hora exacta o estimada</label>
+            <div style={{ gridColumn: esEventoSismico(formData.tipo_alerta) ? 'span 2' : 'span 1' }}>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Hora exacta</label>
               <input name="hora" type="time" value={formData.hora} onChange={handleChange} required style={inputStyle} />
             </div>
 
@@ -220,14 +248,22 @@ function App() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{ fontSize: '20px' }}>{getIconoAlerta(t.tipo_alerta)}</span>
-                  <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar}, {t.area}</strong>
+                  <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar} {t.area ? `(${t.area})` : ''}</strong>
                   <span style={{ backgroundColor: '#334155', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
                     {t.tipo_alerta || 'Sismo'}
                   </span>
                 </div>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
-                  Magnitud/Intensidad: <strong style={{ color: '#cbd5e1' }}>{t.magnitud}</strong> | Nivel de Riesgo: <strong style={{ color: '#ef4444' }}>{t.rango}</strong>
-                </p>
+
+                {esEventoSismico(t.tipo_alerta || 'Sismo') ? (
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
+                    Magnitud: <strong style={{ color: '#cbd5e1' }}>{t.magnitud} M</strong> | Profundidad: <strong style={{ color: '#cbd5e1' }}>{t.profundidad} km</strong> | Riesgo: Nivel {t.rango}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
+                    Observaciones: <strong style={{ color: '#cbd5e1' }}>{t.area || 'Sin detalles'}</strong> | Riesgo: Nivel {t.rango}
+                  </p>
+                )}
+
                 <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
                   Reportado por <span style={{ color: '#38bdf8' }}>{t.nombre}</span> el {t.fecha} a las {t.hora}
                 </p>
@@ -257,7 +293,7 @@ function App() {
               <button type="submit" style={{ ...btnStyle, padding: '6px 12px', fontSize: '12px', backgroundColor: '#475569' }}>Acceder</button>
             </form>
           ) : (
-            <p style={{ fontSize: '12px', color: '#22c55e' }}>✅ Modo Administrador Activo (Edición y Eliminación Habilitadas)</p>
+            <p style={{ fontSize: '12px', color: '#22c55e' }}>✅ Modo Administrador Activo</p>
           )}
         </footer>
 
