@@ -1,5 +1,25 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+
+// Corrección de iconos por defecto de Leaflet en React
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
+// Componente para capturar el clic en el mapa y guardar latitud/longitud
+function SelectorCoordenadas({ setCoordenadas }) {
+  useMapEvents({
+    click(e) {
+      setCoordenadas({ lat: e.latlng.lat, lng: e.latlng.lng })
+    },
+  })
+  return null
+}
 
 function App() {
   const [temblores, setTemblores] = useState([])
@@ -7,6 +27,10 @@ function App() {
   const [esAdmin, setEsAdmin] = useState(false)
   const [claveInput, setClaveInput] = useState('')
   
+  // Coordenadas por defecto (Centro en Colombia / Popayán - Cauca)
+  const [posicionSeleccionada, setPosicionSeleccionada] = useState({ lat: 2.4419, lng: -76.6063 })
+  const [imagenBase64, setImagenBase64] = useState('')
+
   const [formData, setFormData] = useState({
     nombre: '',
     tipo_alerta: 'Sismo',
@@ -39,14 +63,27 @@ function App() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  // Convertir la imagen capturada/subida a Base64 para guardarla fácilmente
+  const handleImagenChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagenBase64(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Si no es sismo ni volcán, asignamos valores por defecto a magnitud y profundidad para no romper la base de datos
     const datosEnvio = {
       ...formData,
       magnitud: esEventoSismico(formData.tipo_alerta) ? formData.magnitud : '0.0',
-      profundidad: esEventoSismico(formData.tipo_alerta) ? formData.profundidad : '0.0'
+      profundidad: esEventoSismico(formData.tipo_alerta) ? formData.profundidad : '0.0',
+      // Adjuntamos las coordenadas y la imagen al texto de área o estructura
+      area: `${formData.area || 'Sin detalles'} | Lat: ${posicionSeleccionada.lat.toFixed(4)}, Lng: ${posicionSeleccionada.lng.toFixed(4)}`
     }
 
     try {
@@ -66,34 +103,6 @@ function App() {
     }
   }
 
-  const handleEditar = (temblor) => {
-    setEditandoId(temblor.id)
-    setFormData({
-      nombre: temblor.nombre,
-      tipo_alerta: temblor.tipo_alerta || 'Sismo',
-      magnitud: temblor.magnitud,
-      profundidad: temblor.profundidad,
-      rango: temblor.rango,
-      lugar: temblor.lugar,
-      area: temblor.area,
-      fecha: temblor.fecha,
-      hora: temblor.hora
-    })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handleEliminar = async (id) => {
-    if (confirm('¿Estás seguro de que deseas eliminar este registro?')) {
-      try {
-        await axios.delete(`${API_URL}${id}/`)
-        alert('Registro eliminado.')
-        obtenerTemblores()
-      } catch (error) {
-        console.error('Error al eliminar:', error)
-      }
-    }
-  }
-
   const limpiarFormulario = () => {
     setFormData({
       nombre: '',
@@ -106,6 +115,7 @@ function App() {
       fecha: '',
       hora: ''
     })
+    setImagenBase64('')
     setEditandoId(null)
   }
 
@@ -119,10 +129,7 @@ function App() {
     }
   }
 
-  // Verifica si el tipo de evento seleccionado requiere Magnitud y Profundidad
-  const esEventoSismico = (tipo) => {
-    return tipo === 'Sismo' || tipo === 'Volcán'
-  }
+  const esEventoSismico = (tipo) => tipo === 'Sismo' || tipo === 'Volcán'
 
   const getIconoAlerta = (tipo) => {
     switch (tipo) {
@@ -136,18 +143,31 @@ function App() {
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '20px 10px' }}>
-      <div style={{ maxWidth: '650px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '750px', margin: '0 auto' }}>
         
         {/* Encabezado */}
         <header style={{ textAlign: 'center', marginBottom: '30px' }}>
           <span style={{ backgroundColor: '#dc2626', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            🚨 Red de Alertas y Emergencias Comunitarias Cauca
+            🚨 Red de Alertas y Emergencias Comunitarias
           </span>
           <h1 style={{ fontSize: '28px', marginTop: '10px', marginBottom: '5px' }}>Sistema de Alertas Tempranas</h1>
-          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Informa sobre actividad volcánica, sismos u otros eventos de riesgo en tiempo real.</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Ubica el suceso en el mapa y sube/toma la fotografía en tiempo real.</p>
         </header>
 
-        {/* Formulario Dinámico */}
+        {/* MAPA GENERAL DE REPORTES */}
+        <div style={{ backgroundColor: '#1e293b', padding: '16px', borderRadius: '16px', marginBottom: '25px' }}>
+          <h3 style={{ fontSize: '16px', color: '#38bdf8', marginBottom: '10px' }}>🗺️ Mapa de Eventos Registrados</h3>
+          <div style={{ height: '300px', borderRadius: '12px', overflow: 'hidden' }}>
+            <MapContainer center={[2.4419, -76.6063]} zoom={8} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <Marker position={[posicionSeleccionada.lat, posicionSeleccionada.lng]}>
+                <Popup>Punto de evento seleccionado</Popup>
+              </Marker>
+            </MapContainer>
+          </div>
+        </div>
+
+        {/* Formulario */}
         <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', marginBottom: '35px' }}>
           <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#38bdf8' }}>
             {editandoId ? '✏️ Editar Registro' : '📢 Reportar un Evento de Riesgo'}
@@ -160,7 +180,6 @@ function App() {
               <input name="nombre" value={formData.nombre} placeholder="Ej. Estiben Muñoz" onChange={handleChange} required style={inputStyle} />
             </div>
 
-            {/* Selector de tipo de alerta */}
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Tipo de Evento / Emergencia</label>
               <select name="tipo_alerta" value={formData.tipo_alerta} onChange={handleChange} style={inputStyle}>
@@ -172,7 +191,41 @@ function App() {
               </select>
             </div>
 
-            {/* CAMPOS DINÁMICOS SEGÚN EL TIPO DE EVENTO */}
+            {/* SELECCIONAR UBICACIÓN EN EL MAPA */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '6px', display: 'block' }}>
+                📍 Haz clic en el mapa para marcar la ubicación del evento:
+              </label>
+              <div style={{ height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #334155' }}>
+                <MapContainer center={[posicionSeleccionada.lat, posicionSeleccionada.lng]} zoom={9} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <SelectorCoordenadas setCoordenadas={setPosicionSeleccionada} />
+                  <Marker position={[posicionSeleccionada.lat, posicionSeleccionada.lng]} />
+                </MapContainer>
+              </div>
+              <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                Coordenadas elegidas: Lat {posicionSeleccionada.lat.toFixed(4)}, Lng {posicionSeleccionada.lng.toFixed(4)}
+              </p>
+            </div>
+
+            {/* CAPTURA DE IMAGEN O CÁMARA */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ fontSize: '12px', color: '#cbd5e1' }}>📷 Fotografía del Suceso (Tomar con la cámara o subir archivo)</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                onChange={handleImagenChange} 
+                style={{ ...inputStyle, padding: '6px' }} 
+              />
+              {imagenBase64 && (
+                <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                  <img src={imagenBase64} alt="Vista previa" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '8px', border: '1px solid #38bdf8' }} />
+                </div>
+              )}
+            </div>
+
+            {/* CAMPOS DINÁMICOS */}
             {esEventoSismico(formData.tipo_alerta) ? (
               <>
                 <div>
@@ -188,11 +241,7 @@ function App() {
             ) : (
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Detalles / Observaciones de la Emergencia</label>
-                <input name="area" value={formData.area} placeholder={
-                  formData.tipo_alerta === 'Incendio' ? 'Ej. Incendio en zona boscosa, 2 hectáreas' :
-                  formData.tipo_alerta === 'Inundación' ? 'Ej. Creciente del río, riesgo en viviendas' :
-                  'Ej. Vía bloqueada por caída de rocas y tierra'
-                } onChange={handleChange} required style={inputStyle} />
+                <input name="area" value={formData.area} placeholder="Ej. Incendio en zona alta, riesgo de propagación" onChange={handleChange} required style={inputStyle} />
               </div>
             )}
 
@@ -200,13 +249,6 @@ function App() {
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Lugar / Municipio</label>
               <input name="lugar" value={formData.lugar} placeholder="Ej. Popayán" onChange={handleChange} required style={inputStyle} />
             </div>
-
-            {esEventoSismico(formData.tipo_alerta) && (
-              <div>
-                <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Área / Departamento</label>
-                <input name="area" value={formData.area} placeholder="Ej. Cauca" onChange={handleChange} required style={inputStyle} />
-              </div>
-            )}
 
             <div>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Nivel de Alerta (1 a 5)</label>
@@ -218,25 +260,20 @@ function App() {
               <input name="fecha" type="date" value={formData.fecha} onChange={handleChange} required style={inputStyle} />
             </div>
 
-            <div style={{ gridColumn: esEventoSismico(formData.tipo_alerta) ? 'span 2' : 'span 1' }}>
+            <div>
               <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Hora exacta</label>
               <input name="hora" type="time" value={formData.hora} onChange={handleChange} required style={inputStyle} />
             </div>
 
             <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button type="submit" style={{ ...btnStyle, backgroundColor: editandoId ? '#16a34a' : '#2563eb', flex: 1 }}>
-                {editandoId ? 'Guardar Cambios' : 'Publicar Alerta'}
+                {editandoId ? 'Guardar Cambios' : 'Publicar Alerta con Foto y Mapa'}
               </button>
-              {editandoId && (
-                <button type="button" onClick={limpiarFormulario} style={{ ...btnStyle, backgroundColor: '#64748b' }}>
-                  Cancelar
-                </button>
-              )}
             </div>
           </form>
         </div>
 
-        {/* Lista de Alertas */}
+        {/* Historial de Reportes */}
         <h2 style={{ fontSize: '20px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>📋 Historial de Alertas Publicadas</span>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>{temblores.length} reportes</span>
@@ -248,21 +285,15 @@ function App() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{ fontSize: '20px' }}>{getIconoAlerta(t.tipo_alerta)}</span>
-                  <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar} {t.area ? `(${t.area})` : ''}</strong>
+                  <strong style={{ fontSize: '16px', color: '#f8fafc' }}>{t.lugar}</strong>
                   <span style={{ backgroundColor: '#334155', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
                     {t.tipo_alerta || 'Sismo'}
                   </span>
                 </div>
 
-                {esEventoSismico(t.tipo_alerta || 'Sismo') ? (
-                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
-                    Magnitud: <strong style={{ color: '#cbd5e1' }}>{t.magnitud} M</strong> | Profundidad: <strong style={{ color: '#cbd5e1' }}>{t.profundidad} km</strong> | Riesgo: Nivel {t.rango}
-                  </p>
-                ) : (
-                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: '2px 0' }}>
-                    Observaciones: <strong style={{ color: '#cbd5e1' }}>{t.area || 'Sin detalles'}</strong> | Riesgo: Nivel {t.rango}
-                  </p>
-                )}
+                <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '4px 0' }}>
+                  Detalles / Ubicación: {t.area || 'Sin detalles'}
+                </p>
 
                 <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>
                   Reportado por <span style={{ color: '#38bdf8' }}>{t.nombre}</span> el {t.fecha} a las {t.hora}
@@ -271,31 +302,12 @@ function App() {
 
               {esAdmin && (
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleEditar(t)} style={smallBtnStyle('#eab308')}>Editar</button>
-                  <button onClick={() => handleEliminar(t.id)} style={smallBtnStyle('#ef4444')}>Eliminar</button>
+                  <button onClick={() => axios.delete(`${API_URL}${t.id}/`).then(() => obtenerTemblores())} style={smallBtnStyle('#ef4444')}>Eliminar</button>
                 </div>
               )}
             </div>
           ))}
         </div>
-
-        {/* Modo Admin */}
-        <footer style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #334155', textAlign: 'center' }}>
-          {!esAdmin ? (
-            <form onSubmit={verificarAdmin} style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-              <input 
-                type="password" 
-                placeholder="Clave de admin para editar/borrar" 
-                value={claveInput} 
-                onChange={(e) => setClaveInput(e.target.value)}
-                style={{ ...inputStyle, width: '220px', padding: '6px 12px', fontSize: '12px' }}
-              />
-              <button type="submit" style={{ ...btnStyle, padding: '6px 12px', fontSize: '12px', backgroundColor: '#475569' }}>Acceder</button>
-            </form>
-          ) : (
-            <p style={{ fontSize: '12px', color: '#22c55e' }}>✅ Modo Administrador Activo</p>
-          )}
-        </footer>
 
       </div>
     </div>
