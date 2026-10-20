@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import MapaRuta from './components/MapaRuta';
 
-// Reemplaza la línea de API_URL en src/App.jsx por esta:
 const API_URL = "https://sismos-backend-app.onrender.com/api/temblor/";
+const BACKEND_BASE_URL = "https://sismos-backend-app.onrender.com";
+
 function App() {
   const [alertas, setAlertas] = useState([]);
   const [formData, setFormData] = useState({
@@ -85,6 +86,15 @@ function App() {
     } finally {
       setSubiendo(false);
     }
+  };
+
+  // Función para construir la URL pública de las imágenes
+  const obtenerUrlImagen = (urlRelativa) => {
+    if (!urlRelativa) return null;
+    if (urlRelativa.startsWith('http://') || urlRelativa.startsWith('https://')) {
+      return urlRelativa;
+    }
+    return `${BACKEND_BASE_URL}${urlRelativa}`;
   };
 
   return (
@@ -186,7 +196,14 @@ function App() {
                   <span className="badge-tipo">{item.tipo || 'Sismo'}</span>
                 </div>
                 <p>{item.descripcion}</p>
-                {item.foto && <img src={item.foto} alt="Evidencia" className="img-evidencia" />}
+                {item.foto && (
+                  <img
+                    src={obtenerUrlImagen(item.foto)}
+                    alt="Evidencia"
+                    className="img-evidencia"
+                    style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '10px' }}
+                  />
+                )}
                 <small className="fecha-alerta">Reportado el: {new Date(item.fecha || Date.now()).toLocaleString()}</small>
               </div>
             ))
