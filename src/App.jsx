@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MapaRuta from './components/MapaRuta';
 
 // Reemplaza la línea de API_URL en src/App.jsx por esta:
-const API_URL = 'https://sismos-backend.onrender.com/api/alertas/';
-
+const API_URL = "https://sismos-backend-app.onrender.com/api/temblor/";
 function App() {
   const [alertas, setAlertas] = useState([]);
   const [formData, setFormData] = useState({
