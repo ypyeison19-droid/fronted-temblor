@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MapaRuta from './components/MapaRuta';
+import Globo3D from './components/Globo3D';
 
 const API_URL = "https://sismos-backend-app.onrender.com/api/temblor/";
 const BACKEND_BASE_URL = "https://sismos-backend-app.onrender.com";
@@ -107,6 +108,10 @@ function App() {
 
       {/* Componente de Geolocalización y Medición de Ruta */}
       <MapaRuta />
+
+      {/* Componente de Globo 3D con Alertas */}
+      {/* Visor 3D del Globo Terráqueo */}
+<Globo3D alertas={alertas} />
 
       {/* Formulario de Reportes */}
       <section className="tarjeta">
