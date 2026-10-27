@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import MapaRuta from './components/MapaRuta';
+import Simulacro from './components/simulacro/Simulacro';
 
 // Carga diferida (lazy) del Globo 3D con Three.js para optimizar rendimiento inicial
 const Globo3D = lazy(() => import('./components/Globo3D'));
@@ -344,11 +345,8 @@ export default function App() {
 
       {/* 3. Pestaña Vacía: Simulacro */}
       {tabActiva === 'simulacro' && (
-        <div className="tarjeta" style={{ background: '#0f172a', padding: '30px', borderRadius: '10px', textAlign: 'center' }}>
-          <h2>🛡️ Módulo de Simulacro y Prevención</h2>
-          <p style={{ color: '#94a3b8', marginTop: '10px' }}>Esta sección se encuentra en preparación para configurar rutinas de respuesta ante emergencias.</p>
-        </div>
-      )}
+  <Simulacro />
+)}
 
       {/* 4. Pestaña Vacía: Qué hacer y curiosidades */}
       {tabActiva === 'curiosidades' && (

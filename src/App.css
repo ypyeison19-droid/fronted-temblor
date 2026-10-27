@@ -392,3 +392,117 @@ select {
   height: 400px !important;
   border-radius: 10px;
 }
+
+/* Estilos para el Módulo de Simulacro */
+.panel-marcador {
+  display: flex;
+  justify-content: space-between;
+  background: #0f172a;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  font-size: 1rem;
+}
+
+.simulador-sismo {
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+}
+
+/* Animación de Vibración/Temblor de pantalla */
+.animacion-temblor {
+  animation: temblor 0.15s infinite alternate;
+}
+
+@keyframes temblor {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  20% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+  40% { transform: translate(-1px, 2px) rotate(0.5deg); }
+  60% { transform: translate(2px, 1px) rotate(0deg); }
+  80% { transform: translate(1px, -2px) rotate(0.5deg); }
+  100% { transform: translate(-1px, 1px) rotate(-0.5deg); }
+}
+
+.btn-opcion-simulacro {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-opcion-simulacro:hover:not(:disabled) {
+  background: #334155;
+}
+
+.btn-opcion-simulacro.correcta {
+  background: #065f46 !important;
+  border-color: #10b981 !important;
+}
+
+.btn-opcion-simulacro.incorrecta {
+  background: #991b1b !important;
+  border-color: #ef4444 !important;
+}
+
+.caja-explicacion {
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.caja-explicacion.exito {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+}
+
+.caja-explicacion.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+}
+
+/* Drag and Drop Mochila */
+.grid-mochila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .grid-mochila {
+    grid-template-columns: 1fr;
+  }
+}
+
+.caja-drag, .caja-drop {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 8px;
+  min-height: 180px;
+  border: 2px dashed #334155;
+}
+
+.caja-drop {
+  border-color: #38bdf8;
+}
+
+.item-draggable {
+  background: #0f172a;
+  border: 1px solid #38bdf8;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: grab;
+  user-select: none;
+}
+
+.item-draggable.dentro {
+  border-color: #10b981;
+  background: #064e3b;
+}
