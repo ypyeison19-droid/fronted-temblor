@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import MapaRuta from './components/MapaRuta';
 import Simulacro from './components/simulacro/Simulacro';
+import Guia from './components/Guia';
 
 // Carga diferida (lazy) del Globo 3D con Three.js para optimizar rendimiento inicial
 const Globo3D = lazy(() => import('./components/Globo3D'));
@@ -350,11 +351,8 @@ export default function App() {
 
       {/* 4. Pestaña Vacía: Qué hacer y curiosidades */}
       {tabActiva === 'curiosidades' && (
-        <div className="tarjeta" style={{ background: '#0f172a', padding: '30px', borderRadius: '10px', textAlign: 'center' }}>
-          <h2>💡 Guía de Respuesta y Curiosidades Sísmicas</h2>
-          <p style={{ color: '#94a3b8', marginTop: '10px' }}>Contenido educativo e instrucciones en caso de sismos e inundaciones próximamente disponible.</p>
-        </div>
-      )}
+  <Guia />
+)}
 
     </div>
   );

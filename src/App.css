@@ -506,3 +506,73 @@ select {
   border-color: #10b981;
   background: #064e3b;
 }
+
+/* Banner Destacado: Agáchate, Cúbrete y Sujétate */
+.banner-proteccion {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+/* Grilla de Tarjetas Curiosas */
+.grid-curiosidades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Estructura 3D para el Efecto Flip Card */
+.tarjeta-flip {
+  background-color: transparent;
+  height: 200px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.tarjeta-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+/* Estado volteado */
+.tarjeta-flip.volteada .tarjeta-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.tarjeta-flip-front, 
+.tarjeta-flip-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.tarjeta-flip-front {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+}
+
+.tarjeta-flip-front:hover {
+  border-color: #38bdf8;
+}
+
+.tarjeta-flip-back {
+  background-color: #1e293b;
+  border: 1px solid #10b981;
+  transform: rotateY(180deg);
+}
