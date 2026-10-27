@@ -12,14 +12,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapaRuta = () => {
+// Recibimos `tabActiva` para detectar cuándo la pestaña Monitoreo se hace visible
+const MapaRuta = ({ tabActiva }) => {
   const mapRef = useRef(null);
   const routingControlRef = useRef(null);
   const [distancia, setDistancia] = useState(null);
   const [puntos, setPuntos] = useState({ puntoA: null, puntoB: null });
 
+  // 1. Efecto para inicializar el mapa nativo de Leaflet
   useEffect(() => {
-    // 1. Inicializar Mapa centrado (Coordenadas de Popayán por defecto)
+    // Inicializar Mapa centrado (Coordenadas de Popayán por defecto)
     const map = L.map('mapa-indrive').setView([2.4419, -76.6063], 14);
     mapRef.current = map;
 
@@ -27,7 +29,7 @@ const MapaRuta = () => {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    // 2. Obtener Geolocalización actual (Punto A)
+    // Obtener Geolocalización actual (Punto A)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -42,7 +44,7 @@ const MapaRuta = () => {
       );
     }
 
-    // 3. Capturar clics para definir Punto A y Punto B
+    // Capturar clics para definir Punto A y Punto B
     let tempA = null;
     let tempB = null;
 
@@ -54,7 +56,7 @@ const MapaRuta = () => {
         tempB = e.latlng;
         setPuntos((prev) => ({ ...prev, puntoB: tempB }));
 
-        // Trazar Ruta trazada estilo inDrive
+        // Trazar Ruta estilo inDrive
         if (routingControlRef.current) {
           map.removeControl(routingControlRef.current);
         }
@@ -94,6 +96,17 @@ const MapaRuta = () => {
     return () => map.remove();
   }, []);
 
+  // 2. EFECTO CLAVE: Forzar redibujado de Leaflet al cambiar a la pestaña 'monitoreo'
+  useEffect(() => {
+    if (tabActiva === 'monitoreo' && mapRef.current) {
+      // Pequeño timeout para permitir que el DOM renderice el contenedor antes de redibujar
+      const timer = setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [tabActiva]);
+
   return (
     <div className="tarjeta">
       <h2>Georreferenciación y Medición de Ruta</h2>
@@ -109,6 +122,7 @@ const MapaRuta = () => {
         </div>
       )}
 
+      {/* Contenedor del mapa */}
       <div id="mapa-indrive" style={{ height: '400px', width: '100%', borderRadius: '8px' }}></div>
     </div>
   );
