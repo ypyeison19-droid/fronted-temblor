@@ -576,3 +576,224 @@ select {
   border: 1px solid #10b981;
   transform: rotateY(180deg);
 }
+
+/* --- ESTILOS MEJORADOS PARA MAPARUTA.JSX --- */
+
+.tarjeta-mapa-wrapper {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Modo Pantalla Completa */
+.tarjeta-mapa-wrapper.modo-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  border-radius: 0;
+  padding: 15px;
+  overflow: auto;
+}
+
+.mapa-header-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-fullscreen-toggle {
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-fullscreen-toggle:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+/* Error de GPS */
+.banner-gps-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* Controles e Inputs */
+.mapa-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-mapa-act {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-mapa-act:hover {
+  background: #1d4ed8;
+}
+
+.btn-mapa-act.activo-gps {
+  background: #dc2626;
+}
+
+.btn-mapa-act.activo-gps:hover {
+  background: #b91c1c;
+}
+
+.btn-mapa-sec {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.btn-mapa-sec:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+/* Buscador Nominatim */
+.buscador-nominatim-box {
+  position: relative;
+  flex-grow: 1;
+  max-width: 380px;
+  min-width: 240px;
+}
+
+.buscador-nominatim-box input {
+  width: 100%;
+  padding: 8px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.buscador-nominatim-box input:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+.spinner-mini {
+  position: absolute;
+  right: 10px;
+  top: 9px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #334155;
+  border-top: 2px solid #38bdf8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Tarjeta de Métricas de Ruta */
+.panel-info-ruta-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 10px 15px;
+  border-radius: 8px;
+}
+
+.selector-modo-transporte {
+  display: flex;
+  gap: 4px;
+  background: #0f172a;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.selector-modo-transporte button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selector-modo-transporte button.activo {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.metricas-ruta-box {
+  display: flex;
+  gap: 15px;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.btn-limpiar-destino {
+  margin-left: auto;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid #ef4444;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-limpiar-destino:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* Lienzo del Mapa (Full Width & Responsive Height) */
+.mapa-frame {
+  width: 100%;
+  height: 440px;
+  min-height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+}
+
+@media (min-width: 1024px) {
+  .mapa-frame {
+    height: 520px;
+  }
+}
+
+.tarjeta-mapa-wrapper.modo-fullscreen .mapa-frame {
+  height: calc(100vh - 150px) !important;
+}
